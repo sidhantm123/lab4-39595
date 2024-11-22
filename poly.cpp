@@ -6,8 +6,8 @@
 using namespace std;
 using PCPair = std::pair<size_t, int>;
 
-/** Helper function to merge terms with the same power */
-void simplify_polynomial(std::vector<PCPair>& terms) {
+//use this is condense the polynomial (eliminate 0 terms and combine like terms)
+void polynomial::simplify_polynomial(std::vector<PCPair>& terms) {
     int i = 0;
     for (auto temp = terms.begin(); temp != terms.end();) {
         if (temp[i].second == 0) {
@@ -21,27 +21,26 @@ void simplify_polynomial(std::vector<PCPair>& terms) {
     // create a map to find like terms fast
     std::map<size_t, int> aggregated;
 
-    // Aggregate coefficients
+    // add like terms
     for (const auto& term : terms) {
         int power = term.first;
         double coeff = term.second;
         aggregated[power] += coeff;
     }
 
-    // Convert the map back to a vector
+    // Convert map back to a vector
     std::vector<PCPair> result(aggregated.begin(), aggregated.end());
     terms = result;
 
 }
 
-/** Default constructor: represents the zero polynomial */
+// default constructor
 polynomial::polynomial() {
-    // Add a polynomial of 0x^0 into the group of polynomials that we have
     terms.push_back({0,0});
 
 }
 
-/** Constructor from iterator range */
+// iter constructor
 // template <typename Iter>
 // polynomial::polynomial(Iter begin, Iter end) : terms(begin, end) {
 //     simplify_polynomial(terms);
@@ -50,7 +49,7 @@ polynomial::polynomial() {
 /** Copy constructor */
 polynomial::polynomial(const polynomial& other) : terms(other.terms) {}
 
-/** Print the polynomial (for debugging) */
+// Print the polynomial (for debugging)
 void polynomial::print() const {
     for (const auto& [p, c] : terms) {
         std::cout << c << "x^" << p << " ";
@@ -58,7 +57,7 @@ void polynomial::print() const {
     std::cout << std::endl;
 }
 
-/** Assignment operator (takes a deep copy of the polynom it is being assigned to)*/
+// Assignment operator (takes a deep copy of the polynom it is being assigned to)
 polynomial& polynomial::operator=(const polynomial& other) {
     if (this != &other) {
         terms = other.terms;
@@ -66,21 +65,22 @@ polynomial& polynomial::operator=(const polynomial& other) {
     return *this;
 }
 
-/** Addition of two polynomials */
-polynomial operator+(const polynomial& lhs, const polynomial& rhs) {
-    // Get the terms of both polynomials
-    std::vector<std::pair<power, coeff>> terms1 = lhs.canonical_form();
-    std::vector<std::pair<power, coeff>> terms2 = rhs.canonical_form();
+// Polynomial + polynomial
+polynomial polynomial::operator+(const polynomial& rhs) {
+    // conv to canonical form to traverse and index more easilu
+    auto lhs = *this;
+    std::vector<PCPair> terms1 = lhs.canonical_form();
+    std::vector<PCPair> terms2 = rhs.canonical_form();
 
-    // Resultant terms
+    // Result
     std::vector<std::pair<power, coeff>> result;
 
-    // Merging process
-    size_t i = 0, j = 0;
+    // Merge
+    size_t i = 0;
+    size_t j = 0;
     while (i < terms1.size() && j < terms2.size()) {
         // if terms have the same power then add coeffs
         if (terms1[i].first == terms2[j].first) {
-            // Same degree: add coefficients
             int coefficientSum = terms1[i].second + terms2[j].second;
             if (coefficientSum != 0) {
                 result.emplace_back(terms1[i].first, coefficientSum);
@@ -98,66 +98,64 @@ polynomial operator+(const polynomial& lhs, const polynomial& rhs) {
         }
     }
 
-    // Add any remaining terms from terms1
+    // Add remaining terms from terms1
     while (i < terms1.size()) {
         result.push_back(terms1[i]);
         ++i;
     }
 
-    // Add any remaining terms from terms2
+    // Add remaining terms from terms2
     while (j < terms2.size()) {
         result.push_back(terms2[j]);
         ++j;
     }
 
-    // Simplify the result
-    simplify_polynomial(result);
+    polynomial::simplify_polynomial(result);
 
-    // Construct a new polynomial with the resultant terms
+    // use constructor to convers result to type polynomial and retirn it
     return polynomial(result.begin(), result.end());
 }
 
-/** Addition of polynomial and integer (poly + int) */
-polynomial operator+(const polynomial& poly, int value) {
-    // Get the canonical form of the input polynomial
-    std::vector<std::pair<power, coeff>> terms = poly.canonical_form();
+// poly + int
+polynomial polynomial::operator+(const int value) {
+    // Get the canonical form
+    std::vector<PCPair> terms = this->canonical_form();
 
     // Check if there is a constant term (power = 0)
     bool constantTermFound = false;
     for (auto& [power, coeff] : terms) {
         if (power == 0) {
-            coeff += value; // Add the integer to the constant term
+            coeff += value;
             constantTermFound = true;
             break;
         }
     }
 
-    // If no constant term exists, add one with the given value
-    // Adding the integer to the end of the poly
+    // Adding the integer to the end of the poly if there is no other const term
     if (!constantTermFound && value != 0) {
         terms.emplace_back(0, value);
     }
-
     // Sort terms in asc order
     std::sort(terms.begin(), terms.end());
 
-    // Construct and return the resulting polynomial
     return polynomial(terms.begin(), terms.end());
 }
 
-/** Addition of integer and polynomial (int + poly) */
-polynomial operator+(int value, const polynomial& poly) {
+// int + poly (just call poly + int)
+polynomial operator+(int value, polynomial& poly) {
     return poly + value;
 }
 
-/** Multiplication of two polynomials */
-polynomial operator*(const polynomial& lhs, const polynomial& rhs) {
-    std::vector<std::pair<power, coeff>> resultTerms;
-    // Get canonical forms of both polynomials
-    const auto& lhsTerms = lhs.canonical_form();
+// polynomial * polynomial
+polynomial polynomial::operator*(const polynomial& rhs) {
+    // to store result
+    std::vector<PCPair> resultTerms;
+
+    // Get canonical form
+    const auto& lhsTerms = this->canonical_form();
     const auto& rhsTerms = rhs.canonical_form();
 
-    // Use a map to accumulate terms by power
+    // map to traverse and index better
     std::map<power, coeff> termMap;
 
     // Multiply each term in lhs by each term in rhs
@@ -169,20 +167,21 @@ polynomial operator*(const polynomial& lhs, const polynomial& rhs) {
 
     // Convert map back to vector
     for (const auto& [power, coefficient] : termMap) {
-        if (coefficient != 0) { // Skip zero coefficients
+        if (coefficient != 0) {
             resultTerms.emplace_back(power, coefficient);
         }
     }
-    // Sort terms by descending power
-    std::sort(resultTerms.rbegin(), resultTerms.rend());
+    // Sort terms asc
+    std::sort(resultTerms.begin(), resultTerms.end());
 
-    // Construct the result polynomial
-    return polynomial(resultTerms.begin(), resultTerms.end());
+    // Convert std::vector<PCPair> back to polynoomail
+    auto toReturn = polynomial(resultTerms.begin(), resultTerms.end());
+    return toReturn;
 }
 
-/** Multiplication of polynomial and integer (poly * int) */
-polynomial operator*(const polynomial& poly, int value) {
-    polynomial result(poly);
+// poly * int
+polynomial polynomial::operator*(const int value) {
+    polynomial result = *this;
     for (auto& [p, c] : result.terms) {
         c *= value;
     }
@@ -190,14 +189,15 @@ polynomial operator*(const polynomial& poly, int value) {
     return result;
 }
 
-/** Multiplication of integer and polynomial (int * poly) */
-polynomial operator*(int value, const polynomial& poly) {
+// int * poly (just return poly * int)
+polynomial operator*(const int value, polynomial &poly) {
     return poly * value;
 }
 
 /** Polynomial modulus (poly % poly) */
-polynomial operator%(const polynomial& p, const polynomial& d) {
-    // Validate divisor is not a zero polynomial
+polynomial polynomial::operator%(const polynomial& d) {
+    const auto p = *this;
+    // check if divisor is == 0
     if (d.canonical_form().empty() || 
         (d.canonical_form().size() == 1 && d.canonical_form()[0].second == 0)) {
         throw std::invalid_argument("Division by zero polynomial");
@@ -207,43 +207,41 @@ polynomial operator%(const polynomial& p, const polynomial& d) {
     auto dividendTerms = p.canonical_form();
     auto divisorTerms = d.canonical_form();
 
-    // Initialize the dividend and divisor as polynomials
-    polynomial dividend(dividendTerms.begin(), dividendTerms.end());
-    polynomial divisor(divisorTerms.begin(), divisorTerms.end());
+    polynomial dividend = *this;
+    polynomial divisor = d;
 
-    // Result polynomial to store the remainder
+    // store the remainder
     polynomial remainder = dividend;
 
-    // Perform polynomial division
+    // division
     while (!remainder.canonical_form().empty() && 
            remainder.canonical_form()[0].first >= divisor.canonical_form()[0].first) {
         // Get the leading terms of the dividend and divisor
-        power diff_power = remainder.canonical_form()[0].first - divisor.canonical_form()[0].first;
-        coeff quotient_coeff = remainder.canonical_form()[0].second / divisor.canonical_form()[0].second;
+        int diff_power = remainder.canonical_form()[0].first - divisor.canonical_form()[0].first;
+        size_t quotient_coeff = remainder.canonical_form()[0].second / divisor.canonical_form()[0].second;
 
-        // Create a temporary polynomial for the scaled divisor
-        std::vector<std::pair<power, coeff>> tempTerms;
+        // temp vector
+        std::vector<PCPair> tempTerms;
         for (const auto& [p, c] : divisor.canonical_form()) {
             tempTerms.emplace_back(p + diff_power, c * quotient_coeff);
         }
+        // conv temp to polynomial
         polynomial temp(tempTerms.begin(), tempTerms.end());
-
-        // Subtract the scaled divisor from the dividend
         remainder = remainder + (temp * -1);
     }
 
-    // Simplify the remainder polynomial
+    polynomial::simplify_polynomial(remainder.terms);
     return remainder;
 }
 
-/** Returns the degree of the polynomial */
+// get degree
 size_t polynomial::find_degree_of() {
     return terms.empty() ? 0 : terms.rbegin()->first;
 }
 
-/** Returns the canonical form of the polynomial */
-std::vector<std::pair<power, coeff>> polynomial::canonical_form() const {
-    std::vector<std::pair<power, coeff>> canonical;
+// this will give you the canonical form of the polynomial
+std::vector<PCPair> polynomial::canonical_form() const {
+    std::vector<PCPair> canonical;
     for (auto it = terms.begin(); it != terms.end(); ++it) {
         canonical.emplace_back(it->first, it->second);
     }

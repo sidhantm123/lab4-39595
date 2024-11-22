@@ -86,15 +86,13 @@ public:
     /**
      * @brief Overload the +, *, and % operators for polynomial arithmetic
      */
-    friend polynomial operator+(const polynomial &lhs, const polynomial &rhs);
-    friend polynomial operator+(const polynomial &poly, int value);
-    friend polynomial operator+(int value, const polynomial &poly);
+    polynomial operator+(const polynomial &rhs);
+    polynomial operator+(const int value);
 
-    friend polynomial operator*(const polynomial &lhs, const polynomial &rhs);
-    friend polynomial operator*(const polynomial &poly, int value);
-    friend polynomial operator*(int value, const polynomial &poly);
+    polynomial operator*(const polynomial &rhs);
+    polynomial operator*(const int value);
 
-    friend polynomial operator%(const polynomial &p, const polynomial &d);
+    polynomial operator%(const polynomial &d);
 
 private:
     /**
@@ -105,5 +103,8 @@ private:
      */
     static void simplify_polynomial(std::vector<std::pair<power, coeff>>& terms);
 };
+
+polynomial operator+(int value, polynomial &poly);
+polynomial operator*(const int value, polynomial &poly);
 
 #endif

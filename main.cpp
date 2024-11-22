@@ -12,7 +12,7 @@ std::optional<double> poly_test(polynomial& p1,
 {
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-    polynomial p3 = p1 * p2;
+    polynomial p3 = p1 % p2;
 
     auto p3_can_form = p3.canonical_form();
 
@@ -31,13 +31,14 @@ std::optional<double> poly_test(polynomial& p1,
 int main()
 {
     /** We're doing (x+1)^2, so solution is x^2 + 2x + 1*/
-    std::vector<std::pair<power, coeff>> mult_solution = {{2,1}, {1,2}, {0,1}};
+    std::vector<std::pair<power, coeff>> mult_solution = {{0,1}, {1,1}};
 
     /** This holds (x+1), which we'll pass to each polynomial */
-    std::vector<std::pair<power, coeff>> poly_input = {{1,1}, {0,1}};
+    std::vector<std::pair<power, coeff>> poly_input_1 = {{2,1}, {1,2}, {0, 1}};
+    std::vector<std::pair<power, coeff>> poly_input_2 = {{1,1}, {0,1}};
 
-    polynomial p1(poly_input.begin(), poly_input.end());
-    polynomial p2(poly_input.begin(), poly_input.end());
+    polynomial p1(poly_input_2.begin(), poly_input_2.end());
+    polynomial p2(poly_input_1.begin(), poly_input_1.end());
 
     std::optional<double> result = poly_test(p1, p2, mult_solution);
 
@@ -49,4 +50,6 @@ int main()
     {
         std::cout << "Failed test" << std::endl;
     }
+
+    
 }
