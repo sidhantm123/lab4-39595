@@ -3,7 +3,6 @@
 
 #include <vector>
 #include <utility>
-#include <map>
 #include <cstddef>
 #include <stdexcept>
 
@@ -14,7 +13,7 @@ class polynomial
 {
 private:
     // Internal representation of the polynomial as a map of power to coefficient
-    std::map<power, coeff> terms;
+    std::vector<std::pair<power, coeff>> terms;
 
 public:
     /**
@@ -33,9 +32,7 @@ public:
      *  The end of the container to copy elements from
      */
     template <typename Iter>
-    polynomial(Iter begin, Iter end) : terms(begin, end) {
-        simplify_polynomial(terms);
-    }
+    polynomial(Iter begin, Iter end) : terms(begin, end) {}
 
     /**
      * @brief Construct a new polynomial object from an existing polynomial object
@@ -106,7 +103,7 @@ private:
      * @param terms
      * A map of power to coefficient representing the polynomial
      */
-    static void simplify_polynomial(std::map<power, coeff>& terms);
+    static void simplify_polynomial(std::vector<std::pair<power, coeff>>& terms);
 };
 
 #endif

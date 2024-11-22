@@ -2,7 +2,7 @@
 #include <chrono>
 #include <optional>
 #include <vector>
-
+using namespace std;
 #include "poly.h"
 
 std::optional<double> poly_test(polynomial& p1,
@@ -31,7 +31,7 @@ std::optional<double> poly_test(polynomial& p1,
 int main()
 {
     /** We're doing (x+1)^2, so solution is x^2 + 2x + 1*/
-    std::vector<std::pair<power, coeff>> solution = {{2,1}, {1,2}, {0,1}};
+    std::vector<std::pair<power, coeff>> mult_solution = {{2,1}, {1,2}, {0,1}};
 
     /** This holds (x+1), which we'll pass to each polynomial */
     std::vector<std::pair<power, coeff>> poly_input = {{1,1}, {0,1}};
@@ -39,7 +39,7 @@ int main()
     polynomial p1(poly_input.begin(), poly_input.end());
     polynomial p2(poly_input.begin(), poly_input.end());
 
-    std::optional<double> result = poly_test(p1, p2, solution);
+    std::optional<double> result = poly_test(p1, p2, mult_solution);
 
     if (result.has_value())
     {
